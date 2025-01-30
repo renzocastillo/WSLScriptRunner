@@ -175,14 +175,24 @@ class WSLScriptRunner(FlowLauncher):
                 "IcoPath": "Images/error.png"
             }]
 
-        script_path = os.path.join(scripts_dir, script_name)
+        # Convert Windows path separators to Unix style
+        script_path = os.path.join(scripts_dir, script_name).replace('\\', '/')
         try:
-            subprocess.Popen(["wsl", "bash", "-c", script_path], 
-                           creationflags=subprocess.CREATE_NO_WINDOW)
-        except OSError as e:
+            # First ensure the script is executable
+            subprocess.check_output(["wsl", "bash", "-c", f"chmod +x '{script_path}'"], 
+                                 creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            # Execute the script in WSL terminal
+            subprocess.Popen([
+                "wsl.exe",
+                "--cd", os.path.dirname(script_path),
+                "bash", "-ic", f"'{script_path}' ; echo '\\nPress Enter to close...' ; read"
+            ])
+            
+        except Exception as e:
             return [{
                 "Title": "Error executing script",
-                "SubTitle": f"{str(e)}",
+                "SubTitle": f"Error: {str(e)}",
                 "IcoPath": "Images/error.png"
             }]
         return []
