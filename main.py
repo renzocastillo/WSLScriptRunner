@@ -215,13 +215,13 @@ class WSLScriptRunner(FlowLauncher):
     def get_plugin_metadata(self):
         return {
             "ID": "FlowLauncher.WSLScriptRunner",
-            "ActionKeyword": "wsl",
+            "ActionKeyword": "wsr",
             "Name": "WSL Script Runner",
             "Description": "Run your shell scripts in WSL",
             "Author": "renzo",
             "Version": "1.0.0",
             "Language": "python",
-            "Website": "https://github.com/YourRepo",
+            "Website": "https://github.com/renzocastillo/WSLScriptRunner/",
             "ExecuteFileName": "main.py",
             "IcoPath": "Images/app.png"
         }
