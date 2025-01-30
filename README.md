@@ -33,7 +33,7 @@ pm install WSL Script Runner
 
 ## Usage
 
-1. Type `wsl` in Flow Launcher to activate the plugin
+1. Type `wsr` in Flow Launcher to activate the plugin
 2. Start typing to search for your scripts
 3. Press Enter to execute the selected script
 4. Right-click or Shift+Enter for additional options:
