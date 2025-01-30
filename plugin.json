@@ -1,0 +1,13 @@
+{
+  "ID": "D2D2C23B084D411DB66FE0C79D6C2A6A",
+  "ActionKeyword": "wsl",
+  "Name": "WSL Script Runner",
+  "Description": "Run your shell scripts in WSL",
+  "Author": "renzo",
+  "Version": "1.0.0",
+  "Language": "python",
+  "Website": "https://github.com/YourRepo",
+  "ExecuteFileName": "main.py",
+  "IcoPath": "Images\\app.png",
+  "Disabled": false
+}
