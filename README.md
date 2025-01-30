@@ -67,7 +67,7 @@ Example `settings.json`:
 ### Setup
 1. Clone the repository
 ```bash
-git clone https://github.com/YourRepo/Flow.Launcher.Plugin.WSLScriptRunner
+git clone https://github.com/renzocastillo/WSLScriptRunner
 ```
 
 2. Create a symbolic link in Flow Launcher's plugin directory
