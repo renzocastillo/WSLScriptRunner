@@ -45,7 +45,7 @@ pm install WSL Script Runner
 
 By default, the plugin looks for scripts in `~/scripts` in your WSL home directory. You can change this by:
 
-1. Type `wsl` in Flow Launcher
+1. Type `wsr` in Flow Launcher
 2. Right-click on any result
 3. Select "Configure Scripts Directory"
 4. Edit the `settings.json` file that opens
