@@ -16,6 +16,8 @@ class WSLScriptRunner(FlowLauncher):
         super().__init__()
 
     def _initialize_settings(self):
+        """Initialize settings, creating settings.json if it doesn't exist"""
+        self.settings = {}  # Start with empty settings
         try:
             settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
             if os.path.exists(settings_path):
@@ -23,8 +25,8 @@ class WSLScriptRunner(FlowLauncher):
                     loaded_settings = json.load(f)
                     if isinstance(loaded_settings, dict):
                         self.settings.update(loaded_settings)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Error loading settings: {str(e)}")
 
     def query(self, param: str = "") -> list:
         """
@@ -247,10 +249,12 @@ class WSLScriptRunner(FlowLauncher):
         self._initialize_settings()
 
     def save_settings(self):
+        """Save current settings to settings.json"""
         try:
             settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+            os.makedirs(os.path.dirname(settings_path), exist_ok=True)  # Ensure directory exists
             with open(settings_path, "w") as f:
-                json.dump(self.settings, f)
+                json.dump(self.settings, f, indent=2)
         except Exception as e:
             print(f"Error saving settings: {str(e)}")
 

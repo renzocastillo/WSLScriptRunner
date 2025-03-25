@@ -1,6 +1,14 @@
 
-.qodo
-
-.idea/
-
+# User settings
 settings.json
+
+# IDE
+.idea/
+.qodo/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
