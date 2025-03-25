@@ -10,9 +10,10 @@ from flowlauncher import FlowLauncher
 
 class WSLScriptRunner(FlowLauncher):
     def __init__(self):
-        self.settings = {"scripts_dir": "~/scripts"}  # Initialize settings first
+        self.settings = {}  # Initialize empty settings
+        self.setting_scripts_dir = False  # Flag for settings mode
         self._initialize_settings()
-        super().__init__()  # Call parent init after our initialization
+        super().__init__()
 
     def _initialize_settings(self):
         try:
@@ -31,13 +32,49 @@ class WSLScriptRunner(FlowLauncher):
         the param is what user typed after the plugin action keyword.
         """
         query = param.strip()
+
+        # Handle settings command with path
+        if query.lower().startswith('settings '):
+            path = query[9:].strip()  # Get everything after "settings "
+            if path:
+                self.settings["scripts_dir"] = path
+                try:
+                    settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+                    with open(settings_path, "w") as f:
+                        json.dump(self.settings, f, indent=2)
+                    return [{
+                        "Title": "Settings saved!",
+                        "SubTitle": f"Scripts directory set to: {path}",
+                        "IcoPath": "Images/app.png"
+                    }]
+                except Exception as e:
+                    return [{
+                        "Title": "Error saving settings",
+                        "SubTitle": str(e),
+                        "IcoPath": "Images/error.png"
+                    }]
+
+        # Handle bare settings command
+        if query.lower() == 'settings':
+            return [{
+                "Title": "Enter scripts directory path",
+                "SubTitle": "Type 'wsr settings YOUR_PATH' (e.g., wsr settings ~/scripts)",
+                "IcoPath": "Images/app.png"
+            }]
+
+        if "scripts_dir" not in self.settings:
+            return [{
+                "Title": "Scripts directory not configured",
+                "SubTitle": "Type 'wsr settings YOUR_PATH' to configure (e.g., wsr settings ~/scripts)",
+                "IcoPath": "Images/error.png"
+            }]
+
         scripts_dir = self.get_scripts_dir()
         if not scripts_dir:
             return [{
                 "Title": "Error retrieving scripts directory",
                 "SubTitle": "Check settings or ensure WSL is running.",
-                "IcoPath": "Images/error.png",
-                "ContextData": "error"
+                "IcoPath": "Images/error.png"
             }]
 
         try:
@@ -50,13 +87,12 @@ class WSLScriptRunner(FlowLauncher):
             return [{
                 "Title": "Error reading scripts directory",
                 "SubTitle": "Check if WSL is running and the directory exists",
-                "IcoPath": "Images/error.png",
-                "ContextData": "error"
+                "IcoPath": "Images/error.png"
             }]
 
         results = []
         for script in scripts:
-            if query.lower() in script.lower():
+            if not query or query.lower() in script.lower():
                 results.append({
                     "Title": script,
                     "SubTitle": f"Run {script}",
@@ -69,26 +105,33 @@ class WSLScriptRunner(FlowLauncher):
                     "ContextData": {"script": script, "path": os.path.join(scripts_dir, script)}
                 })
 
+        if not query:
+            results.insert(0, {
+                "Title": "Configure Scripts Directory",
+                "SubTitle": f"Current: {self.settings.get('scripts_dir', 'Not configured')}",
+                "IcoPath": "Images/app.png"
+            })
+
         return results if results else [{
             "Title": "No matching scripts found",
-            "SubTitle": "Try a different search term",
-            "IcoPath": "Images/app.png",
-            "ContextData": "no_results"
+            "SubTitle": "Try a different search term or type 'settings' to configure",
+            "IcoPath": "Images/app.png"
         }]
 
     def context_menu(self, data) -> list:
         """
         Optional context menu implementation
         """
-        if not data or data == "error" or data == "no_results":
+        if not data:
+            current_dir = self.settings.get("scripts_dir", "Not configured")
             return [{
                 "Title": "Configure Scripts Directory",
-                "SubTitle": f"Current: {self.settings.get('scripts_dir', '~/scripts')}",
+                "SubTitle": f"Current: {current_dir}",
                 "IcoPath": "Images/app.png",
                 "JsonRPCAction": {
-                    "method": "open_settings",
+                    "method": "start_settings",
                     "parameters": [],
-                    "dontHideAfterAction": False
+                    "dontHideAfterAction": True
                 }
             }]
         
@@ -109,7 +152,7 @@ class WSLScriptRunner(FlowLauncher):
             },
             {
                 "Title": "Open scripts directory",
-                "SubTitle": self.settings.get("scripts_dir", "~/scripts"),
+                "SubTitle": self.settings.get("scripts_dir", "Not configured"),
                 "IcoPath": "Images/app.png",
                 "JsonRPCAction": {
                     "method": "open_scripts_dir",
@@ -151,7 +194,10 @@ class WSLScriptRunner(FlowLauncher):
         return []
 
     def get_scripts_dir(self):
-        scripts_dir = self.settings.get("scripts_dir", "~/scripts")
+        if "scripts_dir" not in self.settings:
+            return None
+            
+        scripts_dir = self.settings["scripts_dir"]
         try:
             resolved_path = subprocess.check_output(["wsl", "bash", "-c", f"echo $(eval echo {scripts_dir})"], 
                                                   text=True, 
@@ -209,8 +255,25 @@ class WSLScriptRunner(FlowLauncher):
             print(f"Error saving settings: {str(e)}")
 
     def open_settings(self):
-        self.save_settings()
-        return []
+        try:
+            # Update settings with the new scripts directory
+            self.settings["scripts_dir"] = self.get_query()
+            # Save to file
+            settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+            with open(settings_path, "w") as f:
+                json.dump(self.settings, f, indent=2)
+            return [{
+                "Title": "Settings saved",
+                "SubTitle": f"Scripts directory set to: {self.settings['scripts_dir']}",
+                "IcoPath": "Images/app.png"
+            }]
+        except Exception as e:
+            print(f"Error saving settings: {str(e)}")
+            return [{
+                "Title": "Error saving settings",
+                "SubTitle": str(e),
+                "IcoPath": "Images/error.png"
+            }]
 
     def get_plugin_metadata(self):
         return {
@@ -225,6 +288,15 @@ class WSLScriptRunner(FlowLauncher):
             "ExecuteFileName": "main.py",
             "IcoPath": "Images/app.png"
         }
+
+    def start_settings(self):
+        """Start the settings input mode"""
+        self.setting_scripts_dir = True
+        return [{
+            "Title": "Enter scripts directory path",
+            "SubTitle": "Example: ~/scripts or /home/user/scripts",
+            "IcoPath": "Images/app.png"
+        }]
 
 if __name__ == "__main__":
     WSLScriptRunner()
